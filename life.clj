@@ -58,16 +58,6 @@
 (defn static-cell [cel]
   cel)
 
-(defn update-cell [world cel]
-  (let [neighbor-count (live-neighbor-count world cel)]
-    (if (alive? cel) 
-       (if (or (= neighbor-count 2) (= neighbor-count 3))
-         cel
-         (kill-cell cel))
-       (if (= neighbor-count 2)
-         (resurrect-cell cel)
-         cel))))
-
 (defn alive-rule [neighbor-count] 
   ({2 static-cell 3 static-cell} neighbor-count kill-cell))
  
@@ -76,17 +66,14 @@
 
 (def *rules* {:alive alive-rule :dead dead-rule})
 
-(defn update-cell-rules [world cel]
-  (let [neighbor-count (live-neighbor-count world cel)]
-    ((:state cel) *rules*)))
+(defn update-cell [world cel]
+   (let [neighbor-count (live-neighbor-count world cel)]
+    ((((:state cel) *rules*) neighbor-count) cel)))
 
 (defn update-world [world]
   (vec (for [row world]
          (vec (for [cel row]
                 (update-cell world cel))))))
-
-(defn step-world []
-  (dosync (ref-set *world* (update-world @*world*))))
 
 (defn print-world [world]
   (let [disp {:alive \+ :dead \.}]
@@ -95,19 +82,28 @@
       (println))
     (println)))  
 
-(defn run [steps]
-  (dotimes [i steps]
-    (step-world)
-    (print-world @*world*)))
+; Define *world* at top level (but this doesn't work)
+;(def *world* (ref []))
 
 (defn initialize
   ([] (initialize *dimensions*))
   ([dimensions] (initialize dimensions #{}))
   ([dimensions seeds]
+     ;(dosync (ref-set *world* (make-world dimensions seeds)))))
      (def *world* (ref (make-world dimensions seeds)))))
 
-; Now, make it go  
-(def *seeds* #{[0 3] [1 3] [0 4] [1 4] [1 2] [1 3] [1 4] [1 5] [1 6] [2 1]
-               [2 2] [2 3] [3 4] [3 3]})
+(defn step-world []
+  (dosync (ref-set *world* (update-world @*world*))))
+
+(defn run [steps]
+  (dotimes [i steps]
+    (step-world)
+    (print-world @*world*)))
+
+; Now, make it go
+; Seed with 'Acorn' pattern.  Needs bigger than 20x20 for full realization
+; http://www.conwaylife.com/wiki/index.php?title=Acorn
+(def *seeds* #{[1 2] [2 4] [3 1] [3 2] [3 5] [3 6] [3 7]})
 (initialize *dimensions* *seeds*)
-;(run 10)
+(print-world @*world*)
+(run 10)
