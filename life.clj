@@ -39,10 +39,6 @@
 (def *adjacencies* (map make-coordinate
                         (disj (set (for [r [-1 0 1] c [-1 0 1]] [r c])) [0 0])))
                      
-;(def *adjacencies* (map make-coordinate
-;                        (disj (set (cartesian-product '(-1 0 1) '(-1 0 1)))
-;                              '(0 0))))
-
 (defn neighbors [world coord]
     (map #(neighbor world coord %) *adjacencies*))
 
@@ -82,14 +78,10 @@
       (println))
     (println)))  
 
-; Define *world* at top level (but this doesn't work)
-;(def *world* (ref []))
-
 (defn initialize
   ([] (initialize *dimensions*))
   ([dimensions] (initialize dimensions #{}))
   ([dimensions seeds]
-     ;(dosync (ref-set *world* (make-world dimensions seeds)))))
      (def *world* (ref (make-world dimensions seeds)))))
 
 (defn step-world []
@@ -100,7 +92,7 @@
     (step-world)
     (print-world @*world*)))
 
-; Now, make it go
+; Now, make it go.
 ; Seed with 'Acorn' pattern.  Needs bigger than 20x20 for full realization
 ; http://www.conwaylife.com/wiki/index.php?title=Acorn
 (def *seeds* #{[1 2] [2 4] [3 1] [3 2] [3 5] [3 6] [3 7]})
